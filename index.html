@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Character Creator</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background: #0f0f13;
+      color: #e4e4e7;
+      line-height: 1.5;
+      padding: 20px;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+    h1 { margin-bottom: 8px; font-size: 1.8rem; }
+    .subtitle { color: #a1a1aa; margin-bottom: 24px; font-size: 0.95rem; }
+    .card {
+      background: #18181b;
+      border: 1px solid #27272a;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+    label {
+      display: block;
+      font-size: 0.85rem;
+      color: #a1a1aa;
+      margin-bottom: 4px;
+      margin-top: 12px;
+    }
+    label:first-child { margin-top: 0; }
+    input, textarea, select {
+      width: 100%;
+      padding: 10px 12px;
+      background: #09090b;
+      border: 1px solid #3f3f46;
+      border-radius: 8px;
+      color: #e4e4e7;
+      font-size: 0.95rem;
+    }
+    input:focus, textarea:focus, select:focus {
+      outline: none;
+      border-color: #71717a;
+    }
+    textarea { min-height: 80px; resize: vertical; }
+    .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    @media (max-width: 600px) { .row { grid-template-columns: 1fr; } }
+    .buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 20px;
+    }
+    button {
+      padding: 10px 18px;
+      border-radius: 8px;
+      border: none;
+      font-size: 0.95rem;
+      cursor: pointer;
+      font-weight: 500;
+    }
+    .btn-primary { background: #3b82f6; color: white; }
+    .btn-primary:hover { background: #2563eb; }
+    .btn-secondary { background: #27272a; color: #e4e4e7; }
+    .btn-secondary:hover { background: #3f3f46; }
+    .btn-danger { background: #7f1d1d; color: #fecaca; }
+    .btn-danger:hover { background: #991b1b; }
+    #result {
+      display: none;
+      white-space: pre-wrap;
+      background: #09090b;
+      border: 1px solid #27272a;
+      border-radius: 8px;
+      padding: 16px;
+      margin-top: 16px;
+      font-family: ui-monospace, monospace;
+      font-size: 0.9rem;
+      line-height: 1.6;
+    }
+    #savedList { margin-top: 12px; }
+    .saved-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 12px;
+      background: #09090b;
+      border: 1px solid #27272a;
+      border-radius: 8px;
+      margin-bottom: 8px;
+    }
+    .saved-item span { cursor: pointer; }
+    .saved-item span:hover { color: #93c5fd; }
+    .small { font-size: 0.8rem; color: #71717a; margin-top: 8px; }
+  </style>
+</head>
+<body>
+
+  <h1>Character Creator</h1>
+  <p class="subtitle">Private tool • Data stays only in your browser</p>
+
+  <div class="card">
+    <div class="row">
+      <div>
+        <label>Name</label>
+        <input type="text" id="name" placeholder="Character name">
+      </div>
+      <div>
+        <label>Age</label>
+        <input type="text" id="age" placeholder="e.g. 27 or Unknown">
+      </div>
+    </div>
+
+    <label>Role / Occupation</label>
+    <input type="text" id="role" placeholder="e.g. Pirate navigator, Cult priest, Survivor medic">
+
+    <label>Personality & Traits</label>
+    <textarea id="personality" placeholder="Key traits, habits, strengths, flaws..."></textarea>
+
+    <label>Appearance</label>
+    <textarea id="appearance" placeholder="Face, body, clothing, distinctive features..."></textarea>
+
+    <label>Backstory (short)</label>
+    <textarea id="backstory" placeholder="Important past events..."></textarea>
+
+    <label>Secrets</label>
+    <textarea id="secrets" placeholder="Things they hide from others..."></textarea>
+
+    <label>How they speak</label>
+    <textarea id="speech" placeholder="Tone, vocabulary, catchphrases, accent..."></textarea>
+
+    <label>Relationships</label>
+    <textarea id="relationships" placeholder="How they feel about other characters..."></textarea>
+
+    <label>Current Goal / Mood</label>
+    <textarea id="goal" placeholder="What they want right now + current emotional state..."></textarea>
+
+    <label>Extra Notes</label>
+    <textarea id="notes" placeholder="Anything else..."></textarea>
+
+    <div class="buttons">
+      <button class="btn-primary" onclick="generate()">Generate Character Sheet</button>
+      <button class="btn-secondary" onclick="saveCharacter()">Save Character</button>
+      <button class="btn-secondary" onclick="clearForm()">Clear Form</button>
+    </div>
+
+    <div id="result"></div>
+  </div>
+
+  <div class="card">
+    <h3 style="margin-bottom: 12px;">Saved Characters</h3>
+    <div id="savedList"></div>
+    <p class="small">Characters are saved only in this browser. Clearing browser data will delete them.</p>
+  </div>
+
+  <script>
+    function generate() {
+      const fields = {
+        Name: document.getElementById('name').value.trim() || 'Unnamed',
+        Age: document.getElementById('age').value.trim() || '—',
+        Role: document.getElementById('role').value.trim() || '—',
+        Personality: document.getElementById('personality').value.trim() || '—',
+        Appearance: document.getElementById('appearance').value.trim() || '—',
+        Backstory: document.getElementById('backstory').value.trim() || '—',
+        Secrets: document.getElementById('secrets').value.trim() || '—',
+        Speech: document.getElementById('speech').value.trim() || '—',
+        Relationships: document.getElementById('relationships').value.trim() || '—',
+        Goal: document.getElementById('goal').value.trim() || '—',
+        Notes: document.getElementById('notes').value.trim() || '—'
+      };
+
+      let text = `==============================
+CHARACTER SHEET
+==============================
+
+Name:          ${fields.Name}
+Age:           ${fields.Age}
+Role:          ${fields.Role}
+
+Personality & Traits:
+${fields.Personality}
+
+Appearance:
+${fields.Appearance}
+
+Backstory:
+${fields.Backstory}
+
+Secrets:
+${fields.Secrets}
+
+How they speak:
+${fields.Speech}
+
+Relationships:
+${fields.Relationships}
+
+Current Goal / Mood:
+${fields.Goal}
+
+Extra Notes:
+${fields.Notes}
+
+==============================`;
+
+      const result = document.getElementById('result');
+      result.style.display = 'block';
+      result.textContent = text;
+    }
+
+    function saveCharacter() {
+      const name = document.getElementById('name').value.trim();
+      if (!name) {
+        alert('Please enter at least a name before saving.');
+        return;
+      }
+
+      const data = {
+        name,
+        age: document.getElementById('age').value,
+        role: document.getElementById('role').value,
+        personality: document.getElementById('personality').value,
+        appearance: document.getElementById('appearance').value,
+        backstory: document.getElementById('backstory').value,
+        secrets: document.getElementById('secrets').value,
+        speech: document.getElementById('speech').value,
+        relationships: document.getElementById('relationships').value,
+        goal: document.getElementById('goal').value,
+        notes: document.getElementById('notes').value,
+        savedAt: new Date().toLocaleString()
+      };
+
+      let saved = JSON.parse(localStorage.getItem('characters') || '[]');
+      // Replace if same name exists
+      saved = saved.filter(c => c.name !== name);
+      saved.push(data);
+      localStorage.setItem('characters', JSON.stringify(saved));
+      renderSaved();
+      alert('Character saved!');
+    }
+
+    function loadCharacter(name) {
+      const saved = JSON.parse(localStorage.getItem('characters') || '[]');
+      const char = saved.find(c => c.name === name);
+      if (!char) return;
+
+      document.getElementById('name').value = char.name || '';
+      document.getElementById('age').value = char.age || '';
+      document.getElementById('role').value = char.role || '';
+      document.getElementById('personality').value = char.personality || '';
+      document.getElementById('appearance').value = char.appearance || '';
+      document.getElementById('backstory').value = char.backstory || '';
+      document.getElementById('secrets').value = char.secrets || '';
+      document.getElementById('speech').value = char.speech || '';
+      document.getElementById('relationships').value = char.relationships || '';
+      document.getElementById('goal').value = char.goal || '';
+      document.getElementById('notes').value = char.notes || '';
+      generate();
+    }
+
+    function deleteCharacter(name) {
+      if (!confirm(`Delete character "${name}"?`)) return;
+      let saved = JSON.parse(localStorage.getItem('characters') || '[]');
+      saved = saved.filter(c => c.name !== name);
+      localStorage.setItem('characters', JSON.stringify(saved));
+      renderSaved();
+    }
+
+    function renderSaved() {
+      const saved = JSON.parse(localStorage.getItem('characters') || '[]');
+      const list = document.getElementById('savedList');
+      if (saved.length === 0) {
+        list.innerHTML = '<p style="color:#71717a">No saved characters yet.</p>';
+        return;
+      }
+      list.innerHTML = saved.map(c => `
+        <div class="saved-item">
+          <span onclick="loadCharacter('\( {c.name.replace(/'/g, "\\'")}')"> \){c.name}</span>
+          <button class="btn-danger" style="padding:4px 10px;font-size:0.8rem" onclick="deleteCharacter('${c.name.replace(/'/g, "\\'")}')">Delete</button>
+        </div>
+      `).join('');
+    }
+
+    function clearForm() {
+      document.querySelectorAll('input, textarea').forEach(el => el.value = '');
+      document.getElementById('result').style.display = 'none';
+    }
+
+    // Load saved list on start
+    renderSaved();
+  </script>
+</body>
+</html>
