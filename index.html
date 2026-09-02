@@ -449,7 +449,7 @@ ${char.notes}
       
       let startY = 180;
       
-      // Handle image drawing
+      // Draw image if exists
       if (char.image) {
         const img = new Image();
         img.crossOrigin = "Anonymous";
@@ -460,6 +460,9 @@ ${char.notes}
           const imgHeight = 300;
           const centerX = width/2 - imgWidth/2;
           const imgY = startY;
+          
+          // Save context state
+          ctx.save();
           
           // Shadow for image
           ctx.shadowColor = 'rgba(139, 92, 246, 0.3)';
@@ -481,9 +484,11 @@ ${char.notes}
           ctx.clip();
           
           ctx.drawImage(img, centerX, imgY, imgWidth, imgHeight);
-          ctx.shadowBlur = 0;
           
-          // Border around image
+          // Restore context state (removes clip)
+          ctx.restore();
+          
+          // Border around image (draw after restore)
           ctx.strokeStyle = 'rgba(139, 92, 246, 0.5)';
           ctx.lineWidth = 3;
           ctx.shadowBlur = 0;
