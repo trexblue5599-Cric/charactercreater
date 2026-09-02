@@ -335,11 +335,31 @@ ${char.notes}
       }
     }
 
-    function downloadCharacterImage() {
-      const char = getCharacterData();
+    function wrapText(ctx, text, x, y, maxWidth, lineHeight) {
+      const words = text.split(' ');
+      let currentLine = '';
+      let lines = [];
       
-      // Create a canvas
-      const canvas = document.getElementById('characterCardCanvas');
+      for (let word of words) {
+        const testLine = currentLine + word + ' ';
+        const metrics = ctx.measureText(testLine);
+        if (metrics.width > maxWidth && currentLine !== '') {
+          lines.push(currentLine.trim());
+          currentLine = word + ' ';
+        } else {
+          currentLine = testLine;
+        }
+      }
+      lines.push(currentLine.trim());
+      
+      for (let line of lines) {
+        ctx.fillText(line, x, y);
+        y += lineHeight;
+      }
+      return y;
+    }
+
+    function drawCharacterCard(char, canvas) {
       const ctx = canvas.getContext('2d');
       
       // Set canvas size
@@ -366,14 +386,15 @@ ${char.notes}
       ctx.textAlign = 'center';
       ctx.fillText('CHARACTER SHEET', width/2, 70);
       
+      let startY = 120;
+      
       // Draw character image if exists
-      let imageY = 100;
       if (char.image) {
         const img = new Image();
         img.onload = function() {
           // Draw image in a circle
           const centerX = width/2;
-          const centerY = 180;
+          const centerY = 200;
           const radius = 100;
           
           ctx.save();
@@ -392,52 +413,30 @@ ${char.notes}
           ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
           ctx.stroke();
           
-          imageY = 300;
-          drawText(char, ctx, width, imageY);
+          // Draw the rest of the card after image loads
+          drawCardContent(char, ctx, width, 340);
+        };
+        img.onerror = function() {
+          // If image fails to load, continue without it
+          drawCardContent(char, ctx, width, 120);
         };
         img.src = char.image;
         return; // Wait for image to load
       } else {
-        // No image, draw placeholder
+        // No image
         ctx.fillStyle = '#3f3f46';
         ctx.font = '16px Arial';
         ctx.textAlign = 'center';
-        ctx.fillText('No Image', width/2, 180);
-        imageY = 220;
-        drawText(char, ctx, width, imageY);
+        ctx.fillText('No Image Uploaded', width/2, 200);
+        drawCardContent(char, ctx, width, 240);
       }
     }
 
-    function drawText(char, ctx, width, startY) {
+    function drawCardContent(char, ctx, width, startY) {
       let y = startY;
       const lineHeight = 28;
       const leftMargin = 50;
       const maxWidth = width - 100;
-      
-      // Helper function to wrap text
-      function wrapText(text, x, y, maxWidth, lineHeight) {
-        const lines = [];
-        let currentLine = '';
-        const words = text.split(' ');
-        
-        for (let word of words) {
-          const testLine = currentLine + word + ' ';
-          const metrics = ctx.measureText(testLine);
-          if (metrics.width > maxWidth && currentLine !== '') {
-            lines.push(currentLine.trim());
-            currentLine = word + ' ';
-          } else {
-            currentLine = testLine;
-          }
-        }
-        lines.push(currentLine.trim());
-        
-        for (let line of lines) {
-          ctx.fillText(line, x, y);
-          y += lineHeight;
-        }
-        return y;
-      }
       
       // Draw fields
       const fields = [
@@ -454,7 +453,6 @@ ${char.notes}
         { label: 'Extra Notes:', value: char.notes }
       ];
       
-      ctx.fillStyle = '#e4e4e7';
       ctx.textAlign = 'left';
       
       for (let field of fields) {
@@ -468,28 +466,46 @@ ${char.notes}
           // Draw value with wrapping
           ctx.font = '16px Arial';
           ctx.fillStyle = '#e4e4e7';
-          y = wrapText(field.value, leftMargin + 20, y, maxWidth - 20, lineHeight);
+          y = wrapText(ctx, field.value, leftMargin + 20, y, maxWidth - 20, lineHeight);
           y += 10; // Extra spacing between fields
         }
       }
       
       // Footer
+      const canvas = ctx.canvas;
+      const height = canvas.height;
       ctx.fillStyle = '#71717a';
       ctx.font = '14px Arial';
       ctx.textAlign = 'center';
       ctx.fillText(`Generated: ${new Date().toLocaleString()}`, width/2, height - 40);
       
       // Add watermark
-      ctx.fillStyle = 'rgba(59, 130, 246, 0.1)';
+      ctx.fillStyle = 'rgba(59, 130, 246, 0.05)';
       ctx.font = 'bold 80px Arial';
       ctx.textAlign = 'center';
       ctx.fillText('⚔', width/2, height - 100);
       
-      // Download the image
+      // Download the image after everything is drawn
       const link = document.createElement('a');
       link.download = `${char.name}_character_sheet.png`;
       link.href = canvas.toDataURL('image/png');
       link.click();
+    }
+
+    function downloadCharacterImage() {
+      const char = getCharacterData();
+      
+      // Check if character has a name
+      if (!char.name || char.name === 'Unnamed') {
+        alert('Please enter a character name first.');
+        return;
+      }
+      
+      // Get the canvas
+      const canvas = document.getElementById('characterCardCanvas');
+      
+      // Draw the character card
+      drawCharacterCard(char, canvas);
     }
 
     function saveCharacter() {
