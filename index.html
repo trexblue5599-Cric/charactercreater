@@ -363,127 +363,290 @@ ${char.notes}
       const ctx = canvas.getContext('2d');
       
       // Set canvas size
-      const width = 800;
-      const height = 1200;
+      const width = 1000;
+      const height = 1400;
       canvas.width = width;
       canvas.height = height;
       
-      // Background
-      const gradient = ctx.createLinearGradient(0, 0, 0, height);
-      gradient.addColorStop(0, '#1a1a2e');
-      gradient.addColorStop(1, '#16213e');
+      // Background with gradient
+      const gradient = ctx.createLinearGradient(0, 0, width * 0.3, height);
+      gradient.addColorStop(0, '#0f0c29');
+      gradient.addColorStop(0.5, '#302b63');
+      gradient.addColorStop(1, '#24243e');
       ctx.fillStyle = gradient;
       ctx.fillRect(0, 0, width, height);
       
-      // Border
-      ctx.strokeStyle = '#3b82f6';
-      ctx.lineWidth = 4;
-      ctx.strokeRect(10, 10, width - 20, height - 20);
+      // Decorative background elements
+      ctx.globalAlpha = 0.05;
+      ctx.fillStyle = '#8b5cf6';
+      ctx.font = '300px Arial';
+      ctx.textAlign = 'center';
+      ctx.fillText('✦', width * 0.1, height * 0.8);
+      ctx.fillText('✦', width * 0.9, height * 0.2);
+      ctx.globalAlpha = 1;
+      
+      // Outer border glow
+      ctx.shadowColor = 'rgba(139, 92, 246, 0.3)';
+      ctx.shadowBlur = 20;
+      ctx.strokeStyle = 'rgba(139, 92, 246, 0.3)';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(20, 20, width - 40, height - 40);
+      ctx.shadowBlur = 0;
+      
+      // Inner border
+      ctx.strokeStyle = 'rgba(139, 92, 246, 0.1)';
+      ctx.lineWidth = 1;
+      ctx.strokeRect(30, 30, width - 60, height - 60);
+      
+      // Decorative corner accents
+      ctx.strokeStyle = '#8b5cf6';
+      ctx.lineWidth = 3;
+      const cornerSize = 30;
+      // Top left
+      ctx.beginPath();
+      ctx.moveTo(30 + cornerSize, 30);
+      ctx.lineTo(30, 30);
+      ctx.lineTo(30, 30 + cornerSize);
+      ctx.stroke();
+      // Top right
+      ctx.beginPath();
+      ctx.moveTo(width - 30 - cornerSize, 30);
+      ctx.lineTo(width - 30, 30);
+      ctx.lineTo(width - 30, 30 + cornerSize);
+      ctx.stroke();
+      // Bottom left
+      ctx.beginPath();
+      ctx.moveTo(30 + cornerSize, height - 30);
+      ctx.lineTo(30, height - 30);
+      ctx.lineTo(30, height - 30 - cornerSize);
+      ctx.stroke();
+      // Bottom right
+      ctx.beginPath();
+      ctx.moveTo(width - 30 - cornerSize, height - 30);
+      ctx.lineTo(width - 30, height - 30);
+      ctx.lineTo(width - 30, height - 30 - cornerSize);
+      ctx.stroke();
+      
+      // Header background
+      const headerGradient = ctx.createLinearGradient(0, 0, width, 0);
+      headerGradient.addColorStop(0, 'rgba(139, 92, 246, 0.2)');
+      headerGradient.addColorStop(0.5, 'rgba(59, 130, 246, 0.2)');
+      headerGradient.addColorStop(1, 'rgba(139, 92, 246, 0.2)');
+      ctx.fillStyle = headerGradient;
+      ctx.fillRect(40, 40, width - 80, 120);
       
       // Title
-      ctx.fillStyle = '#3b82f6';
-      ctx.font = 'bold 48px Arial';
+      ctx.shadowColor = 'rgba(139, 92, 246, 0.5)';
+      ctx.shadowBlur = 20;
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 52px Georgia, serif';
       ctx.textAlign = 'center';
-      ctx.fillText('CHARACTER SHEET', width/2, 70);
+      ctx.fillText('⚔ CHARACTER SHEET ⚔', width/2, 120);
+      ctx.shadowBlur = 0;
       
-      let startY = 120;
+      // Decorative line under title
+      ctx.strokeStyle = 'rgba(139, 92, 246, 0.3)';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(width/2 - 200, 135);
+      ctx.lineTo(width/2 + 200, 135);
+      ctx.stroke();
       
-      // Draw character image if exists
+      let startY = 180;
+      
+      // Draw character image if exists - RECTANGULAR
       if (char.image) {
         const img = new Image();
         img.onload = function() {
-          // Draw image in a circle
-          const centerX = width/2;
-          const centerY = 200;
-          const radius = 100;
+          // Draw image in a rectangle
+          const imgWidth = 300;
+          const imgHeight = 300;
+          const centerX = width/2 - imgWidth/2;
+          const imgY = startY;
           
-          ctx.save();
+          // Shadow for image
+          ctx.shadowColor = 'rgba(139, 92, 246, 0.3)';
+          ctx.shadowBlur = 30;
+          
+          // Rounded rectangle for image
+          const radius = 15;
           ctx.beginPath();
-          ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+          ctx.moveTo(centerX + radius, imgY);
+          ctx.lineTo(centerX + imgWidth - radius, imgY);
+          ctx.quadraticCurveTo(centerX + imgWidth, imgY, centerX + imgWidth, imgY + radius);
+          ctx.lineTo(centerX + imgWidth, imgY + imgHeight - radius);
+          ctx.quadraticCurveTo(centerX + imgWidth, imgY + imgHeight, centerX + imgWidth - radius, imgY + imgHeight);
+          ctx.lineTo(centerX + radius, imgY + imgHeight);
+          ctx.quadraticCurveTo(centerX, imgY + imgHeight, centerX, imgY + imgHeight - radius);
+          ctx.lineTo(centerX, imgY + radius);
+          ctx.quadraticCurveTo(centerX, imgY, centerX + radius, imgY);
           ctx.closePath();
           ctx.clip();
           
-          ctx.drawImage(img, centerX - radius, centerY - radius, radius * 2, radius * 2);
-          ctx.restore();
+          ctx.drawImage(img, centerX, imgY, imgWidth, imgHeight);
+          ctx.shadowBlur = 0;
           
           // Border around image
-          ctx.strokeStyle = '#3b82f6';
+          ctx.strokeStyle = 'rgba(139, 92, 246, 0.5)';
           ctx.lineWidth = 3;
+          ctx.shadowBlur = 0;
           ctx.beginPath();
-          ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+          ctx.moveTo(centerX + radius, imgY);
+          ctx.lineTo(centerX + imgWidth - radius, imgY);
+          ctx.quadraticCurveTo(centerX + imgWidth, imgY, centerX + imgWidth, imgY + radius);
+          ctx.lineTo(centerX + imgWidth, imgY + imgHeight - radius);
+          ctx.quadraticCurveTo(centerX + imgWidth, imgY + imgHeight, centerX + imgWidth - radius, imgY + imgHeight);
+          ctx.lineTo(centerX + radius, imgY + imgHeight);
+          ctx.quadraticCurveTo(centerX, imgY + imgHeight, centerX, imgY + imgHeight - radius);
+          ctx.lineTo(centerX, imgY + radius);
+          ctx.quadraticCurveTo(centerX, imgY, centerX + radius, imgY);
+          ctx.closePath();
           ctx.stroke();
           
           // Draw the rest of the card after image loads
-          drawCardContent(char, ctx, width, 340);
+          drawCardContent(char, ctx, width, startY + imgHeight + 40);
         };
         img.onerror = function() {
           // If image fails to load, continue without it
-          drawCardContent(char, ctx, width, 120);
+          drawCardContent(char, ctx, width, startY);
         };
         img.src = char.image;
         return; // Wait for image to load
       } else {
-        // No image
-        ctx.fillStyle = '#3f3f46';
-        ctx.font = '16px Arial';
+        // No image placeholder with icon
+        ctx.fillStyle = 'rgba(59, 130, 246, 0.1)';
+        ctx.fillRect(width/2 - 150, startY, 300, 300);
+        ctx.strokeStyle = 'rgba(59, 130, 246, 0.2)';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(width/2 - 150, startY, 300, 300);
+        
+        ctx.fillStyle = 'rgba(139, 92, 246, 0.3)';
+        ctx.font = '80px Arial';
         ctx.textAlign = 'center';
-        ctx.fillText('No Image Uploaded', width/2, 200);
-        drawCardContent(char, ctx, width, 240);
+        ctx.fillText('👤', width/2, startY + 190);
+        
+        ctx.fillStyle = 'rgba(139, 92, 246, 0.2)';
+        ctx.font = '18px Arial';
+        ctx.fillText('No Image Uploaded', width/2, startY + 340);
+        
+        drawCardContent(char, ctx, width, startY + 380);
       }
     }
 
     function drawCardContent(char, ctx, width, startY) {
       let y = startY;
-      const lineHeight = 28;
-      const leftMargin = 50;
-      const maxWidth = width - 100;
+      const lineHeight = 30;
+      const leftMargin = 60;
+      const rightMargin = 60;
+      const maxWidth = width - leftMargin - rightMargin;
       
-      // Draw fields
-      const fields = [
-        { label: 'Name:', value: char.name },
-        { label: 'Age:', value: char.age },
-        { label: 'Role:', value: char.role },
-        { label: 'Personality & Traits:', value: char.personality },
-        { label: 'Appearance:', value: char.appearance },
-        { label: 'Backstory:', value: char.backstory },
-        { label: 'Secrets:', value: char.secrets },
-        { label: 'How they speak:', value: char.speech },
-        { label: 'Relationships:', value: char.relationships },
-        { label: 'Current Goal / Mood:', value: char.goal },
-        { label: 'Extra Notes:', value: char.notes }
+      // Section header style
+      function drawSectionHeader(text, y) {
+        ctx.fillStyle = 'rgba(139, 92, 246, 0.15)';
+        ctx.fillRect(leftMargin, y - 22, maxWidth, 30);
+        ctx.fillStyle = '#a78bfa';
+        ctx.font = 'bold 20px Georgia, serif';
+        ctx.textAlign = 'left';
+        ctx.fillText('▸ ' + text, leftMargin + 10, y);
+        return y + 35;
+      }
+      
+      // Draw fields with sections
+      const sections = [
+        { label: '📌 BASIC INFO', fields: [
+          { label: 'Name:', value: char.name },
+          { label: 'Age:', value: char.age },
+          { label: 'Role:', value: char.role }
+        ]},
+        { label: '🎭 PERSONALITY & TRAITS', fields: [
+          { label: '', value: char.personality }
+        ]},
+        { label: '👤 APPEARANCE', fields: [
+          { label: '', value: char.appearance }
+        ]},
+        { label: '📖 BACKSTORY', fields: [
+          { label: '', value: char.backstory }
+        ]},
+        { label: '🔮 SECRETS', fields: [
+          { label: '', value: char.secrets }
+        ]},
+        { label: '💬 SPEECH', fields: [
+          { label: '', value: char.speech }
+        ]},
+        { label: '🤝 RELATIONSHIPS', fields: [
+          { label: '', value: char.relationships }
+        ]},
+        { label: '🎯 CURRENT GOAL / MOOD', fields: [
+          { label: '', value: char.goal }
+        ]},
+        { label: '📝 EXTRA NOTES', fields: [
+          { label: '', value: char.notes }
+        ]}
       ];
       
       ctx.textAlign = 'left';
       
-      for (let field of fields) {
-        if (field.value && field.value !== '—') {
-          // Draw label
-          ctx.font = 'bold 18px Arial';
-          ctx.fillStyle = '#3b82f6';
-          ctx.fillText(field.label, leftMargin, y);
-          y += 28;
+      for (let section of sections) {
+        // Check if any field in section has a value
+        let hasValue = false;
+        for (let field of section.fields) {
+          if (field.value && field.value !== '—') {
+            hasValue = true;
+            break;
+          }
+        }
+        
+        if (hasValue) {
+          // Draw section header
+          y = drawSectionHeader(section.label, y);
           
-          // Draw value with wrapping
-          ctx.font = '16px Arial';
-          ctx.fillStyle = '#e4e4e7';
-          y = wrapText(ctx, field.value, leftMargin + 20, y, maxWidth - 20, lineHeight);
-          y += 10; // Extra spacing between fields
+          for (let field of section.fields) {
+            if (field.value && field.value !== '—') {
+              if (field.label) {
+                // Draw label
+                ctx.font = 'bold 16px Arial';
+                ctx.fillStyle = '#c4b5fd';
+                ctx.fillText(field.label, leftMargin + 20, y);
+                y += 28;
+                
+                // Draw value with wrapping
+                ctx.font = '15px Arial';
+                ctx.fillStyle = '#e4e4e7';
+                y = wrapText(ctx, field.value, leftMargin + 40, y, maxWidth - 40, lineHeight);
+                y += 8;
+              } else {
+                // Draw value with wrapping (no label)
+                ctx.font = '15px Arial';
+                ctx.fillStyle = '#e4e4e7';
+                y = wrapText(ctx, field.value, leftMargin + 20, y, maxWidth - 20, lineHeight);
+                y += 8;
+              }
+            }
+          }
+          y += 15; // Extra spacing between sections
         }
       }
       
-      // Footer
-      const canvas = ctx.canvas;
-      const height = canvas.height;
+      // Footer with decorative elements
+      const footerY = 1320;
+      
+      // Decorative line
+      ctx.strokeStyle = 'rgba(139, 92, 246, 0.2)';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(leftMargin, footerY);
+      ctx.lineTo(width - rightMargin, footerY);
+      ctx.stroke();
+      
       ctx.fillStyle = '#71717a';
       ctx.font = '14px Arial';
       ctx.textAlign = 'center';
-      ctx.fillText(`Generated: ${new Date().toLocaleString()}`, width/2, height - 40);
+      ctx.fillText(`✨ Generated: ${new Date().toLocaleString()} ✨`, width/2, footerY + 30);
       
-      // Add watermark
-      ctx.fillStyle = 'rgba(59, 130, 246, 0.05)';
-      ctx.font = 'bold 80px Arial';
-      ctx.textAlign = 'center';
-      ctx.fillText('⚔', width/2, height - 100);
+      // Small decorative icons at bottom
+      ctx.fillStyle = 'rgba(139, 92, 246, 0.1)';
+      ctx.font = '20px Arial';
+      ctx.fillText('✦ ✦ ✦', width/2, footerY + 60);
       
       // Download the image after everything is drawn
       const link = document.createElement('a');
