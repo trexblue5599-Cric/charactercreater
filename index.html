@@ -68,6 +68,8 @@
     .btn-secondary:hover { background: #3f3f46; }
     .btn-danger { background: #7f1d1d; color: #fecaca; }
     .btn-danger:hover { background: #991b1b; }
+    .btn-success { background: #22c55e; color: white; }
+    .btn-success:hover { background: #16a34a; }
     #result {
       display: none;
       white-space: pre-wrap;
@@ -94,6 +96,62 @@
     .saved-item span { cursor: pointer; }
     .saved-item span:hover { color: #93c5fd; }
     .small { font-size: 0.8rem; color: #71717a; margin-top: 8px; }
+    
+    /* Image upload styles */
+    .image-upload-area {
+      border: 2px dashed #3f3f46;
+      border-radius: 8px;
+      padding: 20px;
+      text-align: center;
+      margin-top: 8px;
+      cursor: pointer;
+      transition: border-color 0.3s;
+      background: #09090b;
+    }
+    .image-upload-area:hover {
+      border-color: #3b82f6;
+    }
+    .image-upload-area input[type="file"] {
+      display: none;
+    }
+    .image-preview {
+      max-width: 200px;
+      max-height: 200px;
+      border-radius: 8px;
+      margin: 10px auto;
+      display: block;
+    }
+    .image-actions {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      margin-top: 10px;
+    }
+    .saved-item-image {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      object-fit: cover;
+      margin-right: 10px;
+    }
+    .saved-item-content {
+      display: flex;
+      align-items: center;
+      flex: 1;
+    }
+    .character-thumbnail {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      object-fit: cover;
+      margin-right: 10px;
+      background: #27272a;
+    }
+
+    /* Hidden canvas for image generation */
+    #characterCardCanvas {
+      display: none;
+    }
   </style>
 </head>
 <body>
@@ -111,6 +169,20 @@
         <label>Age</label>
         <input type="text" id="age" placeholder="e.g. 27 or Unknown">
       </div>
+    </div>
+
+    <!-- Image Upload Section -->
+    <label>Character Image</label>
+    <div class="image-upload-area" id="imageUploadArea">
+      <input type="file" id="imageInput" accept="image/*">
+      <div id="imagePlaceholder">
+        <p style="color: #71717a; margin: 0;">Click to upload character image</p>
+        <p style="color: #71717a; font-size: 0.8rem; margin: 4px 0;">JPG, PNG, GIF supported</p>
+      </div>
+      <img id="imagePreview" class="image-preview" style="display: none;" alt="Character preview">
+    </div>
+    <div class="image-actions">
+      <button class="btn-secondary" onclick="removeImage()" style="padding: 4px 12px; font-size: 0.8rem;">Remove Image</button>
     </div>
 
     <label>Role / Occupation</label>
@@ -142,6 +214,7 @@
 
     <div class="buttons">
       <button class="btn-primary" onclick="generate()">Generate Character Sheet</button>
+      <button class="btn-success" onclick="downloadCharacterImage()">📥 Download as Image</button>
       <button class="btn-secondary" onclick="saveCharacter()">Save Character</button>
       <button class="btn-secondary" onclick="clearForm()">Clear Form</button>
     </div>
@@ -155,59 +228,268 @@
     <p class="small">Characters are saved only in this browser. Clearing browser data will delete them.</p>
   </div>
 
-  <script>
-    function generate() {
-      const fields = {
-        Name: document.getElementById('name').value.trim() || 'Unnamed',
-        Age: document.getElementById('age').value.trim() || '—',
-        Role: document.getElementById('role').value.trim() || '—',
-        Personality: document.getElementById('personality').value.trim() || '—',
-        Appearance: document.getElementById('appearance').value.trim() || '—',
-        Backstory: document.getElementById('backstory').value.trim() || '—',
-        Secrets: document.getElementById('secrets').value.trim() || '—',
-        Speech: document.getElementById('speech').value.trim() || '—',
-        Relationships: document.getElementById('relationships').value.trim() || '—',
-        Goal: document.getElementById('goal').value.trim() || '—',
-        Notes: document.getElementById('notes').value.trim() || '—'
-      };
+  <!-- Hidden canvas for generating character card image -->
+  <canvas id="characterCardCanvas"></canvas>
 
+  <script>
+    let currentImageData = null;
+
+    // Image upload handling
+    document.getElementById('imageUploadArea').addEventListener('click', function(e) {
+      if (e.target.tagName !== 'BUTTON') {
+        document.getElementById('imageInput').click();
+      }
+    });
+
+    document.getElementById('imageInput').addEventListener('change', function(e) {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(event) {
+          currentImageData = event.target.result;
+          showImagePreview(currentImageData);
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+
+    function showImagePreview(imageData) {
+      const preview = document.getElementById('imagePreview');
+      const placeholder = document.getElementById('imagePlaceholder');
+      preview.src = imageData;
+      preview.style.display = 'block';
+      placeholder.style.display = 'none';
+    }
+
+    function removeImage() {
+      currentImageData = null;
+      const preview = document.getElementById('imagePreview');
+      const placeholder = document.getElementById('imagePlaceholder');
+      preview.style.display = 'none';
+      preview.src = '';
+      placeholder.style.display = 'block';
+      document.getElementById('imageInput').value = '';
+    }
+
+    function getCharacterData() {
+      return {
+        name: document.getElementById('name').value.trim() || 'Unnamed',
+        age: document.getElementById('age').value.trim() || '—',
+        role: document.getElementById('role').value.trim() || '—',
+        personality: document.getElementById('personality').value.trim() || '—',
+        appearance: document.getElementById('appearance').value.trim() || '—',
+        backstory: document.getElementById('backstory').value.trim() || '—',
+        secrets: document.getElementById('secrets').value.trim() || '—',
+        speech: document.getElementById('speech').value.trim() || '—',
+        relationships: document.getElementById('relationships').value.trim() || '—',
+        goal: document.getElementById('goal').value.trim() || '—',
+        notes: document.getElementById('notes').value.trim() || '—',
+        image: currentImageData
+      };
+    }
+
+    function generate() {
+      const char = getCharacterData();
+      
       let text = `==============================
 CHARACTER SHEET
 ==============================
 
-Name:          ${fields.Name}
-Age:           ${fields.Age}
-Role:          ${fields.Role}
+Name:          ${char.name}
+Age:           ${char.age}
+Role:          ${char.role}
 
 Personality & Traits:
-${fields.Personality}
+${char.personality}
 
 Appearance:
-${fields.Appearance}
+${char.appearance}
 
 Backstory:
-${fields.Backstory}
+${char.backstory}
 
 Secrets:
-${fields.Secrets}
+${char.secrets}
 
 How they speak:
-${fields.Speech}
+${char.speech}
 
 Relationships:
-${fields.Relationships}
+${char.relationships}
 
 Current Goal / Mood:
-${fields.Goal}
+${char.goal}
 
 Extra Notes:
-${fields.Notes}
+${char.notes}
 
 ==============================`;
 
       const result = document.getElementById('result');
       result.style.display = 'block';
-      result.textContent = text;
+      
+      if (char.image) {
+        result.innerHTML = `<img src="${char.image}" style="max-width: 150px; border-radius: 8px; margin-bottom: 10px; display: block;">\n${text}`;
+      } else {
+        result.textContent = text;
+      }
+    }
+
+    function downloadCharacterImage() {
+      const char = getCharacterData();
+      
+      // Create a canvas
+      const canvas = document.getElementById('characterCardCanvas');
+      const ctx = canvas.getContext('2d');
+      
+      // Set canvas size
+      const width = 800;
+      const height = 1200;
+      canvas.width = width;
+      canvas.height = height;
+      
+      // Background
+      const gradient = ctx.createLinearGradient(0, 0, 0, height);
+      gradient.addColorStop(0, '#1a1a2e');
+      gradient.addColorStop(1, '#16213e');
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, width, height);
+      
+      // Border
+      ctx.strokeStyle = '#3b82f6';
+      ctx.lineWidth = 4;
+      ctx.strokeRect(10, 10, width - 20, height - 20);
+      
+      // Title
+      ctx.fillStyle = '#3b82f6';
+      ctx.font = 'bold 48px Arial';
+      ctx.textAlign = 'center';
+      ctx.fillText('CHARACTER SHEET', width/2, 70);
+      
+      // Draw character image if exists
+      let imageY = 100;
+      if (char.image) {
+        const img = new Image();
+        img.onload = function() {
+          // Draw image in a circle
+          const centerX = width/2;
+          const centerY = 180;
+          const radius = 100;
+          
+          ctx.save();
+          ctx.beginPath();
+          ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+          ctx.closePath();
+          ctx.clip();
+          
+          ctx.drawImage(img, centerX - radius, centerY - radius, radius * 2, radius * 2);
+          ctx.restore();
+          
+          // Border around image
+          ctx.strokeStyle = '#3b82f6';
+          ctx.lineWidth = 3;
+          ctx.beginPath();
+          ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+          ctx.stroke();
+          
+          imageY = 300;
+          drawText(char, ctx, width, imageY);
+        };
+        img.src = char.image;
+        return; // Wait for image to load
+      } else {
+        // No image, draw placeholder
+        ctx.fillStyle = '#3f3f46';
+        ctx.font = '16px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText('No Image', width/2, 180);
+        imageY = 220;
+        drawText(char, ctx, width, imageY);
+      }
+    }
+
+    function drawText(char, ctx, width, startY) {
+      let y = startY;
+      const lineHeight = 28;
+      const leftMargin = 50;
+      const maxWidth = width - 100;
+      
+      // Helper function to wrap text
+      function wrapText(text, x, y, maxWidth, lineHeight) {
+        const lines = [];
+        let currentLine = '';
+        const words = text.split(' ');
+        
+        for (let word of words) {
+          const testLine = currentLine + word + ' ';
+          const metrics = ctx.measureText(testLine);
+          if (metrics.width > maxWidth && currentLine !== '') {
+            lines.push(currentLine.trim());
+            currentLine = word + ' ';
+          } else {
+            currentLine = testLine;
+          }
+        }
+        lines.push(currentLine.trim());
+        
+        for (let line of lines) {
+          ctx.fillText(line, x, y);
+          y += lineHeight;
+        }
+        return y;
+      }
+      
+      // Draw fields
+      const fields = [
+        { label: 'Name:', value: char.name },
+        { label: 'Age:', value: char.age },
+        { label: 'Role:', value: char.role },
+        { label: 'Personality & Traits:', value: char.personality },
+        { label: 'Appearance:', value: char.appearance },
+        { label: 'Backstory:', value: char.backstory },
+        { label: 'Secrets:', value: char.secrets },
+        { label: 'How they speak:', value: char.speech },
+        { label: 'Relationships:', value: char.relationships },
+        { label: 'Current Goal / Mood:', value: char.goal },
+        { label: 'Extra Notes:', value: char.notes }
+      ];
+      
+      ctx.fillStyle = '#e4e4e7';
+      ctx.textAlign = 'left';
+      
+      for (let field of fields) {
+        if (field.value && field.value !== '—') {
+          // Draw label
+          ctx.font = 'bold 18px Arial';
+          ctx.fillStyle = '#3b82f6';
+          ctx.fillText(field.label, leftMargin, y);
+          y += 28;
+          
+          // Draw value with wrapping
+          ctx.font = '16px Arial';
+          ctx.fillStyle = '#e4e4e7';
+          y = wrapText(field.value, leftMargin + 20, y, maxWidth - 20, lineHeight);
+          y += 10; // Extra spacing between fields
+        }
+      }
+      
+      // Footer
+      ctx.fillStyle = '#71717a';
+      ctx.font = '14px Arial';
+      ctx.textAlign = 'center';
+      ctx.fillText(`Generated: ${new Date().toLocaleString()}`, width/2, height - 40);
+      
+      // Add watermark
+      ctx.fillStyle = 'rgba(59, 130, 246, 0.1)';
+      ctx.font = 'bold 80px Arial';
+      ctx.textAlign = 'center';
+      ctx.fillText('⚔', width/2, height - 100);
+      
+      // Download the image
+      const link = document.createElement('a');
+      link.download = `${char.name}_character_sheet.png`;
+      link.href = canvas.toDataURL('image/png');
+      link.click();
     }
 
     function saveCharacter() {
@@ -229,11 +511,11 @@ ${fields.Notes}
         relationships: document.getElementById('relationships').value,
         goal: document.getElementById('goal').value,
         notes: document.getElementById('notes').value,
+        image: currentImageData,
         savedAt: new Date().toLocaleString()
       };
 
       let saved = JSON.parse(localStorage.getItem('characters') || '[]');
-      // Replace if same name exists
       saved = saved.filter(c => c.name !== name);
       saved.push(data);
       localStorage.setItem('characters', JSON.stringify(saved));
@@ -257,6 +539,14 @@ ${fields.Notes}
       document.getElementById('relationships').value = char.relationships || '';
       document.getElementById('goal').value = char.goal || '';
       document.getElementById('notes').value = char.notes || '';
+      
+      if (char.image) {
+        currentImageData = char.image;
+        showImagePreview(char.image);
+      } else {
+        removeImage();
+      }
+      
       generate();
     }
 
@@ -277,7 +567,10 @@ ${fields.Notes}
       }
       list.innerHTML = saved.map(c => `
         <div class="saved-item">
-          <span onclick="loadCharacter('\( {c.name.replace(/'/g, "\\'")}')"> \){c.name}</span>
+          <div class="saved-item-content" onclick="loadCharacter('${c.name.replace(/'/g, "\\'")}')">
+            ${c.image ? `<img src="${c.image}" class="character-thumbnail" alt="${c.name}">` : `<div class="character-thumbnail" style="display: flex; align-items: center; justify-content: center; background: #3f3f46; color: #a1a1aa; font-size: 0.7rem;">No img</div>`}
+            <span>${c.name}</span>
+          </div>
           <button class="btn-danger" style="padding:4px 10px;font-size:0.8rem" onclick="deleteCharacter('${c.name.replace(/'/g, "\\'")}')">Delete</button>
         </div>
       `).join('');
@@ -285,6 +578,7 @@ ${fields.Notes}
 
     function clearForm() {
       document.querySelectorAll('input, textarea').forEach(el => el.value = '');
+      removeImage();
       document.getElementById('result').style.display = 'none';
     }
 
